@@ -8,7 +8,7 @@ export default function Sidebar({ activeStructure, settings, onStructureChange, 
       <div className="sidebar-header">
         <h1 className="logo">
           <span className="logo-icon">◇</span>
-          Crystal Lattice
+          Auraeon Crystal Lattice
         </h1>
         <p className="logo-sub">Interactive Simulator</p>
       </div>
