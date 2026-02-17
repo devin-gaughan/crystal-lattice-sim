@@ -358,6 +358,134 @@ input:checked + .toggle-switch::after {
   letter-spacing: 0.02em;
 }
 
+/* ── Preset Chips ── */
+.preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+
+.preset-chip {
+  padding: 5px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-chip:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.preset-chip.active {
+  border-color: #60dfff;
+  color: var(--text-primary);
+  background: rgba(96, 223, 255, 0.08);
+  box-shadow: 0 0 8px rgba(96, 223, 255, 0.1);
+}
+
+/* ── HKL Inputs ── */
+.hkl-row {
+  margin-bottom: 14px;
+}
+
+.hkl-inputs {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.hkl-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  transition: border-color 0.2s;
+}
+
+.hkl-field:focus-within {
+  border-color: #60dfff;
+}
+
+.hkl-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--text-muted);
+  min-width: 10px;
+}
+
+.hkl-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.hkl-input::-webkit-inner-spin-button,
+.hkl-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ── Plane Info Row ── */
+.plane-info-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+/* ── D-Spacing Badge ── */
+.dspacing-badge {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(96, 223, 255, 0.05);
+  border: 1px solid rgba(96, 223, 255, 0.15);
+  border-radius: var(--radius-sm);
+}
+
+.atoms-badge {
+  flex: 0 0 auto;
+  min-width: 80px;
+}
+
+.atoms-value {
+  color: #60dfff !important;
+}
+
+.dspacing-label {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dspacing-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #60dfff;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .app {
