@@ -450,7 +450,6 @@ function Lattice({ structure, repeat, latticeConstant, showBonds, showUnitCell, 
       {selectedAtom && (
         <AtomTooltip atom={selectedAtom} structure={structure} position={selectedAtom.position} />
       )}
-      <AtomLegend structure={structure} />
     </RotatingGroup>
   );
 }

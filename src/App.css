@@ -735,11 +735,11 @@ input:checked + .toggle-switch::after {
   color: var(--text-muted);
 }
 
-/* ── Atom Legend (fixed in viewport corner via Html) ── */
+/* ── Atom Legend (top-left of viewport) ── */
 .atom-legend {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
+  position: absolute;
+  top: 12px;
+  left: 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;

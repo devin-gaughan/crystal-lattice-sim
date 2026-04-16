@@ -111,6 +111,21 @@ function App() {
             onScreenshot={handleScreenshotRef}
           />
         </ErrorBoundary>
+        {structure.atomTypes && (() => {
+          const uniqueTypes = [...new Set(structure.atomTypes)];
+          if (uniqueTypes.length < 2) return null;
+          const colors = [structure.color, structure.secondaryColor, structure.tertiaryColor];
+          return (
+            <div className="atom-legend">
+              {uniqueTypes.map((type, i) => (
+                <div key={type} className="atom-legend-item">
+                  <span className="atom-legend-dot" style={{ background: colors[i] || structure.color }} />
+                  <span className="atom-legend-label">{type}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </main>
     </div>
   );
