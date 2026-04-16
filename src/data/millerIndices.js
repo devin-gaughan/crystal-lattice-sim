@@ -1,39 +1,12 @@
 /**
  * Miller Indices Plane Mathematics
- * 
+ *
  * Computes crystallographic planes from (hkl) indices,
  * including d-spacing, plane normals, and atom-plane distances
  * for arbitrary lattice vector systems.
  */
 
-function cross(a, b) {
-  return [
-    a[1] * b[2] - a[2] * b[1],
-    a[2] * b[0] - a[0] * b[2],
-    a[0] * b[1] - a[1] * b[0],
-  ];
-}
-
-function dot(a, b) {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
-
-function scale(v, s) {
-  return [v[0] * s, v[1] * s, v[2] * s];
-}
-
-function add(a, b) {
-  return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-}
-
-function magnitude(v) {
-  return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-}
-
-function normalize(v) {
-  const m = magnitude(v);
-  return m > 0 ? [v[0] / m, v[1] / m, v[2] / m] : [0, 0, 0];
-}
+import { cross, dot, scale, add, magnitude, normalize } from './vectorMath';
 
 /**
  * Compute plane normal and d-spacing for given Miller indices.
@@ -85,7 +58,7 @@ export function atomsOnPlane(atoms, planeNormal, offset, tolerance = 0.15) {
  * Returns polygon vertices AND the edge loop for wireframe rendering.
  */
 export function clipPlaneToBox(planeNormal, offset, bounds) {
-  const [nx, ny, nz] = planeNormal;
+  const [nx] = planeNormal;
   const d = offset;
 
   // Tangent vectors for the plane

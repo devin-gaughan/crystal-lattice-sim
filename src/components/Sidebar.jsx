@@ -1,12 +1,19 @@
 import { STRUCTURES, STRUCTURE_ORDER } from '../data/lattices';
 import { computePlane, COMMON_PLANES } from '../data/millerIndices';
+import { structureFactor, getStructureElement, WAVELENGTHS } from '../data/diffraction';
+import XRDChart from './XRDChart';
 
-export default function Sidebar({ activeStructure, settings, millerIndices, planeStats, onStructureChange, onSettingsChange, onMillerChange }) {
+export default function Sidebar({
+  activeStructure, settings, millerIndices, planeStats,
+  xrdPeaks, wavelength, temperature, sidebarOpen,
+  onStructureChange, onSettingsChange, onMillerChange,
+  onWavelengthChange, onTemperatureChange, onScreenshot,
+}) {
   const structure = STRUCTURES[activeStructure];
   const isPlaneValid = millerIndices.show && !(millerIndices.h === 0 && millerIndices.k === 0 && millerIndices.l === 0);
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header">
         <h1 className="logo">
           <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Auraeon" className="logo-img" style={{width: '36px', height: '36px', marginRight: '8px', verticalAlign: 'middle'}} />
@@ -50,7 +57,7 @@ export default function Sidebar({ activeStructure, settings, millerIndices, plan
             <span className="stat-value">{(structure.packingFraction * 100).toFixed(1)}%</span>
           </div>
           <div className="stat">
-            <span className="stat-label">Lattice (Å)</span>
+            <span className="stat-label">Lattice (A)</span>
             <span className="stat-value">{(settings.latticeConstant || structure.defaultA).toFixed(2)}</span>
           </div>
         </div>
@@ -69,7 +76,7 @@ export default function Sidebar({ activeStructure, settings, millerIndices, plan
           <div className="control-input">
             <input type="range" min={1} max={4} step={1} value={settings.repeat}
               onChange={(e) => onSettingsChange({ repeat: Number(e.target.value) })} />
-            <span className="control-value">{settings.repeat}×{settings.repeat}×{settings.repeat}</span>
+            <span className="control-value">{settings.repeat}&times;{settings.repeat}&times;{settings.repeat}</span>
           </div>
         </div>
 
@@ -88,7 +95,7 @@ export default function Sidebar({ activeStructure, settings, millerIndices, plan
             <input type="range" min={structure.defaultA * 0.5} max={structure.defaultA * 1.5} step={0.01}
               value={settings.latticeConstant || structure.defaultA}
               onChange={(e) => onSettingsChange({ latticeConstant: Number(e.target.value) })} />
-            <span className="control-value">{(settings.latticeConstant || structure.defaultA).toFixed(2)} Å</span>
+            <span className="control-value">{(settings.latticeConstant || structure.defaultA).toFixed(2)} A</span>
           </div>
         </div>
 
@@ -112,13 +119,17 @@ export default function Sidebar({ activeStructure, settings, millerIndices, plan
             <span className="toggle-switch" />
           </label>
         </div>
+
+        {/* Screenshot */}
+        <button className="screenshot-btn" onClick={onScreenshot}>
+          Export PNG
+        </button>
       </section>
 
       {/* Miller Indices / Lattice Planes */}
       <section className="panel">
         <h2 className="panel-title">Lattice Planes</h2>
 
-        {/* Quick presets */}
         <div className="preset-chips">
           {COMMON_PLANES.map((p) => {
             const isActive = millerIndices.show && millerIndices.h === p.h && millerIndices.k === p.k && millerIndices.l === p.l;
@@ -141,7 +152,6 @@ export default function Sidebar({ activeStructure, settings, millerIndices, plan
           })}
         </div>
 
-        {/* Custom hkl inputs */}
         <div className="hkl-row">
           <label className="control-label">Custom (hkl)</label>
           <div className="hkl-inputs">
@@ -166,23 +176,50 @@ export default function Sidebar({ activeStructure, settings, millerIndices, plan
         {isPlaneValid && (() => {
           const a = settings.latticeConstant || structure.defaultA;
           const { dSpacing } = computePlane(millerIndices.h, millerIndices.k, millerIndices.l, structure.vectors, a);
+          const sf = structureFactor(millerIndices.h, millerIndices.k, millerIndices.l, structure.basis);
+          const isAllowed = sf.magnitudeSquared > 0.01;
+          const lambda = WAVELENGTHS[wavelength];
+          const sinTheta = lambda / (2 * dSpacing);
+          const twoTheta = sinTheta <= 1 ? (2 * Math.asin(sinTheta) * 180 / Math.PI) : null;
+
           return (
-            <div className="plane-info-row">
-              <div className="dspacing-badge">
-                <span className="dspacing-label">d-spacing</span>
-                <span className="dspacing-value">{dSpacing.toFixed(3)} Å</span>
-              </div>
-              {planeStats && planeStats.atomCount > 0 && (
-                <div className="dspacing-badge atoms-badge">
-                  <span className="dspacing-label">on plane</span>
-                  <span className="dspacing-value atoms-value">{planeStats.atomCount}</span>
+            <>
+              <div className="plane-info-row">
+                <div className="dspacing-badge">
+                  <span className="dspacing-label">d-spacing</span>
+                  <span className="dspacing-value">{dSpacing.toFixed(3)} A</span>
                 </div>
-              )}
-            </div>
+                {planeStats && planeStats.atomCount > 0 && (
+                  <div className="dspacing-badge atoms-badge">
+                    <span className="dspacing-label">on plane</span>
+                    <span className="dspacing-value atoms-value">{planeStats.atomCount}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="plane-info-row">
+                <div className={`sf-badge ${isAllowed ? 'allowed' : 'forbidden'}`}>
+                  <span className="dspacing-label">|F|&sup2;</span>
+                  <span className="sf-value">{sf.magnitudeSquared.toFixed(1)}</span>
+                </div>
+                <div className={`sf-badge ${isAllowed ? 'allowed' : 'forbidden'}`}>
+                  <span className="dspacing-label">status</span>
+                  <span className={`sf-status ${isAllowed ? 'allowed' : 'forbidden'}`}>
+                    {isAllowed ? 'Allowed' : 'Forbidden'}
+                  </span>
+                </div>
+                {twoTheta !== null && isAllowed && (
+                  <div className="sf-badge allowed">
+                    <span className="dspacing-label">2&theta;</span>
+                    <span className="sf-value">{twoTheta.toFixed(2)}&deg;</span>
+                  </div>
+                )}
+              </div>
+            </>
           );
         })()}
 
-        {/* Plane controls (only shown when plane is active) */}
+        {/* Plane controls */}
         {isPlaneValid && (
           <>
             <div className="control-row">
@@ -207,7 +244,6 @@ export default function Sidebar({ activeStructure, settings, millerIndices, plan
           </>
         )}
 
-        {/* Show/hide toggle */}
         <div className="toggle-group">
           <label className="toggle-row">
             <span>Show Plane</span>
@@ -218,8 +254,96 @@ export default function Sidebar({ activeStructure, settings, millerIndices, plan
         </div>
       </section>
 
+      {/* XRD Pattern */}
+      <section className="panel">
+        <h2 className="panel-title">Powder XRD Pattern</h2>
+
+        {/* Wavelength selector */}
+        <div className="xrd-wavelength-row">
+          <label className="control-label">Source</label>
+          <div className="wavelength-chips">
+            {Object.entries(WAVELENGTHS).map(([name]) => (
+              <button
+                key={name}
+                className={`preset-chip xrd-src-chip ${wavelength === name ? 'active' : ''}`}
+                onClick={() => onWavelengthChange(name)}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="xrd-meta">
+          <span className="xrd-meta-item">
+            &lambda; = {WAVELENGTHS[wavelength].toFixed(4)} A
+          </span>
+          <span className="xrd-meta-item">
+            {getStructureElement(activeStructure)} scattering
+          </span>
+          <span className="xrd-meta-item">
+            {xrdPeaks.length} peaks
+          </span>
+        </div>
+
+        {/* Temperature (Debye-Waller) */}
+        <div className="control-row">
+          <label className="control-label">Temperature (Debye-Waller)</label>
+          <div className="control-input">
+            <input type="range" min={0} max={1500} step={10}
+              value={temperature}
+              onChange={(e) => onTemperatureChange(Number(e.target.value))} />
+            <span className="control-value">{temperature} K</span>
+          </div>
+        </div>
+
+        <XRDChart
+          peaks={xrdPeaks}
+          activeMiller={millerIndices}
+          onPeakClick={(pk) => onMillerChange({ h: pk.hkl[0], k: pk.hkl[1], l: pk.hkl[2], show: true, offset: 0 })}
+        />
+
+        {/* Peak table */}
+        <div className="xrd-table-wrap">
+          <table className="xrd-table">
+            <thead>
+              <tr>
+                <th>(hkl)</th>
+                <th>2&theta; (&deg;)</th>
+                <th>d (A)</th>
+                <th>I (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {xrdPeaks
+                .slice()
+                .sort((a, b) => b.relativeIntensity - a.relativeIntensity)
+                .slice(0, 8)
+                .map((p, i) => {
+                  const isActive = millerIndices.show &&
+                    p.hkl[0] === Math.abs(millerIndices.h) &&
+                    p.hkl[1] === Math.abs(millerIndices.k) &&
+                    p.hkl[2] === Math.abs(millerIndices.l);
+                  return (
+                    <tr
+                      key={i}
+                      className={`xrd-row ${isActive ? 'active' : ''}`}
+                      onClick={() => onMillerChange({ h: p.hkl[0], k: p.hkl[1], l: p.hkl[2], show: true, offset: 0 })}
+                    >
+                      <td className="xrd-hkl">{p.label}</td>
+                      <td>{p.twoTheta.toFixed(2)}</td>
+                      <td>{p.dSpacing.toFixed(3)}</td>
+                      <td>{p.relativeIntensity.toFixed(1)}</td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <div className="sidebar-footer">
-        <span>Drag to rotate · Scroll to zoom</span>
+        <span>Click atoms for info &middot; Drag to rotate &middot; Scroll to zoom</span>
       </div>
     </aside>
   );

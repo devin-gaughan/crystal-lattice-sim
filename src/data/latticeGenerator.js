@@ -1,14 +1,14 @@
 /**
  * Generates 3D atom positions for a crystal lattice.
- * 
+ *
  * @param {Object} structure - Structure definition from lattices.js
  * @param {number} repeat - Number of unit cells to repeat in each direction
  * @param {number} latticeConstant - Lattice constant (Å)
- * @returns {Array} Array of {position: [x,y,z], isCorner: boolean}
+ * @returns {Array} Array of {position: [x,y,z], isEdge: boolean, atomType: string|null}
  */
 export function generateLattice(structure, repeat = 2, latticeConstant = null) {
   const a = latticeConstant || structure.defaultA;
-  const { basis, vectors } = structure;
+  const { basis, vectors, atomTypes } = structure;
   const atoms = [];
   const seen = new Set();
   const tolerance = 0.01;
@@ -18,7 +18,8 @@ export function generateLattice(structure, repeat = 2, latticeConstant = null) {
   for (let i = 0; i < repeat; i++) {
     for (let j = 0; j < repeat; j++) {
       for (let k = 0; k < repeat; k++) {
-        for (const b of basis) {
+        for (let bi = 0; bi < basis.length; bi++) {
+          const b = basis[bi];
           const fracX = b[0] + i;
           const fracY = b[1] + j;
           const fracZ = b[2] + k;
@@ -36,6 +37,7 @@ export function generateLattice(structure, repeat = 2, latticeConstant = null) {
             fracY * vectors[1][2] * a +
             fracZ * vectors[2][2] * a - offset;
 
+          const atomType = atomTypes ? atomTypes[bi] : null;
           const key = `${Math.round(x / tolerance)},${Math.round(y / tolerance)},${Math.round(z / tolerance)}`;
           if (!seen.has(key)) {
             seen.add(key);
@@ -43,6 +45,7 @@ export function generateLattice(structure, repeat = 2, latticeConstant = null) {
               position: [x, y, z],
               isEdge: i === 0 || j === 0 || k === 0 ||
                       i === repeat - 1 || j === repeat - 1 || k === repeat - 1,
+              atomType,
             });
           }
         }
@@ -70,9 +73,25 @@ export function generateBonds(atoms, structure, latticeConstant = null) {
       maxBondLength = a * Math.sqrt(2) / 2 * 1.05;
       break;
     case 'diamond':
+    case 'zincblende':
       maxBondLength = a * Math.sqrt(3) / 4 * 1.05;
       break;
     case 'hcp':
+      maxBondLength = a * 1.05;
+      break;
+    case 'nacl':
+      maxBondLength = a * 0.5 * 1.05;
+      break;
+    case 'cscl':
+      maxBondLength = a * Math.sqrt(3) / 2 * 1.05;
+      break;
+    case 'perovskite':
+      maxBondLength = a * 0.5 * 1.05;
+      break;
+    case 'fluorite':
+      maxBondLength = a * Math.sqrt(3) / 4 * 1.05;
+      break;
+    case 'wurtzite':
       maxBondLength = a * 1.05;
       break;
     default:
