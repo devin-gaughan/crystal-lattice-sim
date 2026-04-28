@@ -13,6 +13,7 @@ An interactive 3D crystal lattice visualizer built with React and Three.js. Expl
 - **Unit Cell Wireframe** — Overlay the fundamental unit cell for reference
 - **Scientific Data** — Coordination numbers, packing fractions, and real material examples
 - **Dark Lab-Instrument UI** — Minimal, distraction-free interface
+- **Lattice Path Counting** — 3D dynamic programming visualization (Project Euler #15 generalized)
 
 ## Tech Stack
 
@@ -21,6 +22,7 @@ An interactive 3D crystal lattice visualizer built with React and Three.js. Expl
 - **Custom CSS** with CSS variables
 
 ## Getting Started
+
 ```bash
 git clone https://github.com/devin-gaughan/crystal-lattice-sim.git
 cd crystal-lattice-sim
@@ -32,7 +34,13 @@ Open <http://localhost:5173> in your browser.
 
 ## Crystal Structures
 
-StructureCoordinationPackingExample MaterialsSimple Cubic652.4%PoloniumBCC868.0%Iron, Tungsten, ChromiumFCC1274.0%Copper, Aluminum, GoldDiamond Cubic434.0%Silicon, Germanium, DiamondHCP1274.0%Titanium, Magnesium, Zinc
+| Structure | Coordination | Packing | Example Materials |
+|-----------|--------------|---------|-------------------|
+| Simple Cubic | 6 | 52.4% | Polonium |
+| BCC | 8 | 68.0% | Iron, Tungsten, Chromium |
+| FCC | 12 | 74.0% | Copper, Aluminum, Gold |
+| Diamond Cubic | 4 | 34.0% | Silicon, Germanium, Diamond |
+| HCP | 12 | 74.0% | Titanium, Magnesium, Zinc |
 
 ## Background
 
@@ -40,6 +48,6 @@ This project draws on experience from semiconductor materials research, where un
 
 ## License
 
-Source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). Free for personal, educational, research, and other noncommercial use. Commercial use requires a separate commercial license — contact [devin@devingaughan.com](mailto:devin@devingaughan.com).
+Source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). Free for personal, educational, research, and other noncommercial use. Commercial use requires a separate commercial license — contact devin@devingaughan.com.
 
 > Note: Earlier revisions of this repository's README declared the MIT license without an accompanying LICENSE file. As of the license change commit, this project is governed exclusively by the PolyForm Noncommercial License 1.0.0 for all purposes going forward.
