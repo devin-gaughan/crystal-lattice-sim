@@ -29,13 +29,10 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
-
+Open <http://localhost:5173> in your browser.
 ## Crystal Structures
 
-| Structure | Coordination | Packing | Example Materials |
-|-----------|-------------|---------|-------------------|
-| Simple Cubic | 6 | 52.4% | Polonium | | BCC | 8 | 68.0% | Iron, Tungsten, Chromium | | FCC | 12 | 74.0% | Copper, Aluminum, Gold | | Diamond Cubic | 4 | 34.0% | Silicon, Germanium, Diamond | | HCP | 12 | 74.0% | Titanium, Magnesium, Zinc |
+StructureCoordinationPackingExample MaterialsSimple Cubic652.4%Polonium
 
 ## Background
 
@@ -43,6 +40,6 @@ This project draws on experience from semiconductor materials research, where un
 
 ## License
 
-Source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). Free for personal, educational, research, and other noncommercial use. Commercial use requires a separate commercial license — contact [devin@auraeon.com](mailto:devin@auraeon.com).
+Source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). Free for personal, educational, research, and other noncommercial use. Commercial use requires a separate commercial license — contact [devin@devingaughan.com](mailto:devin@devingaughan.com).
 
 > Note: Earlier revisions of this repository's README declared the MIT license without an accompanying LICENSE file. As of the license change commit, this project is governed exclusively by the PolyForm Noncommercial License 1.0.0 for all purposes going forward.

@@ -44,4 +44,4 @@ The **licensor** is the individual or entity offering these terms, and the **sof
 ## Commercial Licensing
 
 For commercial use of this software, contact:
-**Devin Gaughan / Auraeon LLC** — devin@auraeon.com — https://auraeon.com
+**Devin Gaughan / Auraeon LLC** — devin@devingaughan.com — https://auraeon.com
