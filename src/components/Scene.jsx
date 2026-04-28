@@ -629,6 +629,51 @@ function Lattice({ structure, repeat, latticeConstant, showBonds, showUnitCell, 
   );
 }
 
+/* ── Camera Auto-Fit ──
+ * Smoothly zooms the camera to frame the visible scene whenever `bounds` (a
+ * half-extent radius from origin) changes. Keeps the user's current orbit
+ * angle — only the radial distance is animated. Once the lerp settles, the
+ * user has full manual control again until the next bounds change.
+ */
+function CameraAutoFit({ bounds, controlsRef }) {
+  const camera = useThree(state => state.camera);
+  const desiredDist = useRef(null);
+
+  useEffect(() => {
+    if (!bounds) return;
+    // Bounding sphere radius of an axis-aligned cube with half-extent `bounds`.
+    const radius = bounds * Math.sqrt(3);
+    const fovRad = (camera.fov * Math.PI) / 180;
+    // Distance to fit bounding sphere within vertical FOV with a 30% margin.
+    const dist = (radius / Math.sin(fovRad / 2)) * 1.3;
+    desiredDist.current = Math.max(camera.near * 2, dist);
+
+    const controls = controlsRef.current;
+    if (controls) {
+      controls.minDistance = Math.max(2, dist * 0.25);
+      controls.maxDistance = dist * 4;
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+  }, [bounds, camera, controlsRef]);
+
+  useFrame(() => {
+    const target = desiredDist.current;
+    if (target == null) return;
+    const cur = camera.position.length();
+    const diff = target - cur;
+    if (Math.abs(diff) < 0.05) {
+      desiredDist.current = null;
+      return;
+    }
+    camera.position.setLength(cur + diff * 0.12);
+    const controls = controlsRef.current;
+    if (controls) controls.update();
+  });
+
+  return null;
+}
+
 /* ── Exported Scene ── */
 
 export default function CrystalScene({ structure, settings, millerIndices, latticePaths, onPlaneStats, onScreenshot }) {
@@ -637,9 +682,28 @@ export default function CrystalScene({ structure, settings, millerIndices, latti
     showUnitCell = true, autoRotate = true, atomRadius = 0.3,
   } = settings;
 
+  // Effective lattice constant for size calculations (settings.latticeConstant
+  // can be null until the user touches it; fall back to the structure default).
+  const a = latticeConstant ?? structure.defaultA;
+
+  // Half-extent of the visible volume — used by CameraAutoFit to frame the
+  // scene on structure / repeat / lattice-path-dimension changes. We take the
+  // larger of the crystal lattice extent and the lattice-path grid extent
+  // (when active) so both fit comfortably in view.
+  const cameraBounds = useMemo(() => {
+    const crystalBounds = (repeat * a) / 2 + a * 0.3;
+    if (latticePaths?.show) {
+      const maxPathDim = Math.max(latticePaths.a, latticePaths.b, latticePaths.c);
+      const pathBounds = (maxPathDim * a) / 2 + a * 0.5;
+      return Math.max(crystalBounds, pathBounds);
+    }
+    return crystalBounds;
+  }, [repeat, a, latticePaths]);
+
   const [selectedAtomIdx, setSelectedAtomIdx] = useState(null);
   const [prevStructure, setPrevStructure] = useState(structure);
   const screenshotRef = useRef(null);
+  const controlsRef = useRef(null);
 
   // Deselect when structure changes (idiomatic React pattern for derived state reset)
   if (prevStructure !== structure) {
@@ -679,7 +743,8 @@ export default function CrystalScene({ structure, settings, millerIndices, latti
         onPlaneStats={onPlaneStats}
         onAtomClick={handleAtomClick} selectedAtomIdx={selectedAtomIdx}
       />
-      <OrbitControls enablePan enableZoom enableRotate minDistance={3} maxDistance={30} autoRotate={false} />
+      <OrbitControls ref={controlsRef} enablePan enableZoom enableRotate minDistance={3} maxDistance={30} autoRotate={false} />
+      <CameraAutoFit bounds={cameraBounds} controlsRef={controlsRef} />
       <Environment preset="night" />
       <ScreenshotHelper screenshotRef={screenshotRef} />
     </Canvas>

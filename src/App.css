@@ -842,3 +842,25 @@ input:checked + .toggle-switch::after {
     min-width: unset;
   }
 }
+
+/* ── Lattice Paths Formula Badge ── */
+.lattice-path-formula-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(96, 223, 255, 0.05);
+  border: 1px solid rgba(96, 223, 255, 0.15);
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  min-width: 0;
+}
+
+.lattice-path-formula {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #60dfff;
+  word-break: break-word;
+  line-height: 1.3;
+}

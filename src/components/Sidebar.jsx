@@ -322,25 +322,26 @@ export default function Sidebar({
             <span className="dspacing-label">Total paths</span>
             <span className="dspacing-value">{formatCount(pathStats.total)}</span>
           </div>
-          <div className={`sf-badge ${pathStats.verified ? 'allowed' : 'forbidden'}`}>
-            <span className="dspacing-label">DP = trinomial</span>
+          <div className="dspacing-badge atoms-badge">
+            <span className="dspacing-label">DP cells</span>
+            <span className="dspacing-value atoms-value">{pathStats.cells}</span>
+          </div>
+        </div>
+
+        <div className="plane-info-row">
+          <div className={`sf-badge ${pathStats.verified ? 'allowed' : 'forbidden'}`} style={{ flex: 1 }}>
+            <span className="dspacing-label">DP vs closed form</span>
             <span className={`sf-status ${pathStats.verified ? 'allowed' : 'forbidden'}`}>
               {pathStats.verified ? 'verified' : 'mismatch'}
             </span>
           </div>
         </div>
 
-        <div className="plane-info-row">
-          <div className="dspacing-badge atoms-badge">
-            <span className="dspacing-label">DP cells</span>
-            <span className="dspacing-value atoms-value">{pathStats.cells}</span>
-          </div>
-          <div className="dspacing-badge atoms-badge">
-            <span className="dspacing-label">Closed form</span>
-            <span className="dspacing-value atoms-value">
-              ({latticePaths.a}+{latticePaths.b}+{latticePaths.c})! / ({latticePaths.a}!&middot;{latticePaths.b}!&middot;{latticePaths.c}!)
-            </span>
-          </div>
+        <div className="lattice-path-formula-badge">
+          <span className="dspacing-label">Closed form</span>
+          <span className="lattice-path-formula">
+            ({latticePaths.a}+{latticePaths.b}+{latticePaths.c})! / ({latticePaths.a}!&middot;{latticePaths.b}!&middot;{latticePaths.c}!)
+          </span>
         </div>
 
         {/* Toggles */}
