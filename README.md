@@ -21,7 +21,6 @@ An interactive 3D crystal lattice visualizer built with React and Three.js. Expl
 - **Custom CSS** with CSS variables
 
 ## Getting Started
-
 ```bash
 git clone https://github.com/devin-gaughan/crystal-lattice-sim.git
 cd crystal-lattice-sim
@@ -30,9 +29,10 @@ npm run dev
 ```
 
 Open <http://localhost:5173> in your browser.
+
 ## Crystal Structures
 
-StructureCoordinationPackingExample MaterialsSimple Cubic652.4%Polonium
+StructureCoordinationPackingExample MaterialsSimple Cubic652.4%PoloniumBCC868.0%Iron, Tungsten, ChromiumFCC1274.0%Copper, Aluminum, GoldDiamond Cubic434.0%Silicon, Germanium, DiamondHCP1274.0%Titanium, Magnesium, Zinc
 
 ## Background
 
