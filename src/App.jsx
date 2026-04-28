@@ -24,6 +24,16 @@ function App() {
     opacity: 0.45,
   });
 
+  const [latticePaths, setLatticePaths] = useState({
+    show: false,
+    a: 4,
+    b: 4,
+    c: 4,
+    playing: true,
+    showEdges: true,
+    resetKey: 0,
+  });
+
   const [planeStats, setPlaneStats] = useState({ atomCount: 0, totalAtoms: 0 });
   const [wavelength, setWavelength] = useState('Cu K\u03b1');
   const [temperature, setTemperature] = useState(0); // Debye-Waller temp (K)
@@ -41,6 +51,14 @@ function App() {
 
   const handleMillerChange = useCallback((patch) => {
     setMillerIndices((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const handleLatticePathsChange = useCallback((patch) => {
+    setLatticePaths((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const handleLatticePathsReset = useCallback(() => {
+    setLatticePaths((prev) => ({ ...prev, resetKey: prev.resetKey + 1, playing: true }));
   }, []);
 
   const handlePlaneStats = useCallback((stats) => {
@@ -89,6 +107,7 @@ function App() {
         activeStructure={activeStructure}
         settings={settings}
         millerIndices={millerIndices}
+        latticePaths={latticePaths}
         planeStats={planeStats}
         xrdPeaks={xrdPeaks}
         wavelength={wavelength}
@@ -97,6 +116,8 @@ function App() {
         onStructureChange={handleStructureChange}
         onSettingsChange={handleSettingsChange}
         onMillerChange={handleMillerChange}
+        onLatticePathsChange={handleLatticePathsChange}
+        onLatticePathsReset={handleLatticePathsReset}
         onWavelengthChange={setWavelength}
         onTemperatureChange={setTemperature}
         onScreenshot={handleScreenshot}
@@ -107,6 +128,7 @@ function App() {
             structure={structure}
             settings={settings}
             millerIndices={millerIndices}
+            latticePaths={latticePaths}
             onPlaneStats={handlePlaneStats}
             onScreenshot={handleScreenshotRef}
           />

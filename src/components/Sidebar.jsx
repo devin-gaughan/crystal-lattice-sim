@@ -1,16 +1,39 @@
+import { useMemo } from 'react';
 import { STRUCTURES, STRUCTURE_ORDER } from '../data/lattices';
 import { computePlane, COMMON_PLANES } from '../data/millerIndices';
 import { structureFactor, getStructureElement, WAVELENGTHS } from '../data/diffraction';
+import {
+  buildPathDP,
+  trinomialCoefficient,
+  formatCount,
+  totalCells,
+} from '../data/latticePaths';
 import XRDChart from './XRDChart';
 
 export default function Sidebar({
-  activeStructure, settings, millerIndices, planeStats,
+  activeStructure, settings, millerIndices, latticePaths, planeStats,
   xrdPeaks, wavelength, temperature, sidebarOpen,
   onStructureChange, onSettingsChange, onMillerChange,
+  onLatticePathsChange, onLatticePathsReset,
   onWavelengthChange, onTemperatureChange, onScreenshot,
 }) {
   const structure = STRUCTURES[activeStructure];
   const isPlaneValid = millerIndices.show && !(millerIndices.h === 0 && millerIndices.k === 0 && millerIndices.l === 0);
+
+  // Lattice path DP results — only computed when panel is meaningful.
+  // Cheap (max 7^3 = 343 cells), but memoized to avoid re-running on every keystroke.
+  const pathStats = useMemo(() => {
+    const { a, b, c } = latticePaths;
+    const dp = buildPathDP(a, b, c);
+    const total = dp[a][b][c];
+    const closedForm = trinomialCoefficient(a, b, c);
+    return {
+      total,
+      closedForm,
+      verified: total === closedForm,
+      cells: totalCells(a, b, c),
+    };
+  }, [latticePaths.a, latticePaths.b, latticePaths.c]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
@@ -252,6 +275,112 @@ export default function Sidebar({
             <span className="toggle-switch" />
           </label>
         </div>
+      </section>
+
+      {/* Lattice Paths (Dynamic Programming) */}
+      <section className="panel">
+        <h2 className="panel-title">Lattice Paths</h2>
+        <p className="info-desc" style={{ marginBottom: 8 }}>
+          Counts monotonic paths from (0,0,0) to (a,b,c) on a 3D grid via dynamic
+          programming. Generalization of Project Euler #15.
+        </p>
+
+        <div className="control-row">
+          <label className="control-label">a (steps in x)</label>
+          <div className="control-input">
+            <input
+              type="range" min={1} max={6} step={1} value={latticePaths.a}
+              onChange={(e) => onLatticePathsChange({ a: Number(e.target.value), resetKey: latticePaths.resetKey + 1 })}
+            />
+            <span className="control-value">{latticePaths.a}</span>
+          </div>
+        </div>
+        <div className="control-row">
+          <label className="control-label">b (steps in y)</label>
+          <div className="control-input">
+            <input
+              type="range" min={1} max={6} step={1} value={latticePaths.b}
+              onChange={(e) => onLatticePathsChange({ b: Number(e.target.value), resetKey: latticePaths.resetKey + 1 })}
+            />
+            <span className="control-value">{latticePaths.b}</span>
+          </div>
+        </div>
+        <div className="control-row">
+          <label className="control-label">c (steps in z)</label>
+          <div className="control-input">
+            <input
+              type="range" min={1} max={6} step={1} value={latticePaths.c}
+              onChange={(e) => onLatticePathsChange({ c: Number(e.target.value), resetKey: latticePaths.resetKey + 1 })}
+            />
+            <span className="control-value">{latticePaths.c}</span>
+          </div>
+        </div>
+
+        {/* Path count display */}
+        <div className="plane-info-row" style={{ marginTop: 12 }}>
+          <div className="dspacing-badge" style={{ minWidth: 0 }}>
+            <span className="dspacing-label">Total paths</span>
+            <span className="dspacing-value">{formatCount(pathStats.total)}</span>
+          </div>
+          <div className={`sf-badge ${pathStats.verified ? 'allowed' : 'forbidden'}`}>
+            <span className="dspacing-label">DP = trinomial</span>
+            <span className={`sf-status ${pathStats.verified ? 'allowed' : 'forbidden'}`}>
+              {pathStats.verified ? 'verified' : 'mismatch'}
+            </span>
+          </div>
+        </div>
+
+        <div className="plane-info-row">
+          <div className="dspacing-badge atoms-badge">
+            <span className="dspacing-label">DP cells</span>
+            <span className="dspacing-value atoms-value">{pathStats.cells}</span>
+          </div>
+          <div className="dspacing-badge atoms-badge">
+            <span className="dspacing-label">Closed form</span>
+            <span className="dspacing-value atoms-value">
+              ({latticePaths.a}+{latticePaths.b}+{latticePaths.c})! / ({latticePaths.a}!&middot;{latticePaths.b}!&middot;{latticePaths.c}!)
+            </span>
+          </div>
+        </div>
+
+        {/* Toggles */}
+        <div className="toggle-group" style={{ marginTop: 12 }}>
+          <label className="toggle-row">
+            <span>Show Lattice Paths</span>
+            <input
+              type="checkbox" checked={latticePaths.show}
+              onChange={(e) => onLatticePathsChange({ show: e.target.checked, resetKey: latticePaths.resetKey + 1 })}
+            />
+            <span className="toggle-switch" />
+          </label>
+          <label className="toggle-row">
+            <span>Animate Fill</span>
+            <input
+              type="checkbox" checked={latticePaths.playing}
+              onChange={(e) => onLatticePathsChange({ playing: e.target.checked })}
+              disabled={!latticePaths.show}
+            />
+            <span className="toggle-switch" />
+          </label>
+          <label className="toggle-row">
+            <span>Show Edges</span>
+            <input
+              type="checkbox" checked={latticePaths.showEdges}
+              onChange={(e) => onLatticePathsChange({ showEdges: e.target.checked })}
+              disabled={!latticePaths.show}
+            />
+            <span className="toggle-switch" />
+          </label>
+        </div>
+
+        <button
+          className="screenshot-btn"
+          onClick={onLatticePathsReset}
+          disabled={!latticePaths.show}
+          style={{ opacity: latticePaths.show ? 1 : 0.4 }}
+        >
+          Reset Animation
+        </button>
       </section>
 
       {/* XRD Pattern */}

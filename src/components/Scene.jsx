@@ -5,6 +5,12 @@ import * as THREE from 'three';
 import { generateLattice, generateBonds, generateUnitCell } from '../data/latticeGenerator';
 import { computePlane, clipPlaneToBox, atomsOnPlane } from '../data/millerIndices';
 import { ATOMIC_RADII } from '../data/lattices';
+import {
+  buildPathDP,
+  logCountField,
+  generatePathGrid,
+  generatePathEdges,
+} from '../data/latticePaths';
 
 /* ── Helpers ── */
 
@@ -331,6 +337,167 @@ function MillerPlane({ structure, latticeConstant, millerIndices, latticeBounds 
   );
 }
 
+/* ── Lattice Path Overlay (Dynamic Programming visualization) ── */
+
+const PATH_NODE_COLOR = new THREE.Color('#d4af37');     // Auraeon champagne gold
+const PATH_NODE_DIM = new THREE.Color('#2a2a2a');       // Unfilled cells
+const PATH_EDGE_COLOR = '#9c8748';                       // Edges between nodes
+
+function LatticePathOverlay({ latticePaths, latticeConstant }) {
+  const { a, b, c, playing, showEdges, resetKey, show } = latticePaths;
+
+  // Compute DP, positions, and color field. Cheap (max 7^3 = 343 cells).
+  const { positions, edges, logField, maxLog, total } = useMemo(() => {
+    const dpTable = buildPathDP(a, b, c);
+    const pos = generatePathGrid(a, b, c, latticeConstant);
+    const edg = generatePathEdges(a, b, c, latticeConstant);
+    const lf = logCountField(dpTable, a, b, c);
+    let mx = 0;
+    for (const v of lf) if (v > mx) mx = v;
+    return {
+      positions: pos,
+      edges: edg,
+      logField: lf,
+      maxLog: mx || 1, // avoid div-by-zero for 1x1x1 case
+      total: pos.length,
+    };
+  }, [a, b, c, latticeConstant]);
+
+  const [step, setStep] = useState(0);
+  const tickAccum = useRef(0);
+
+  // Reset step when dimensions/resetKey change OR when `show` toggles.
+  // React 19 idiom: compare a signature during render rather than setState in
+  // an effect (avoids the react-hooks/set-state-in-effect lint and the extra
+  // render that effect-based resets cause).
+  const resetSignature = `${a}-${b}-${c}-${resetKey}-${show ? 'on' : 'off'}`;
+  const [lastSignature, setLastSignature] = useState(resetSignature);
+  if (resetSignature !== lastSignature) {
+    setLastSignature(resetSignature);
+    setStep(0);
+  }
+
+  // Drain the frame accumulator whenever step is forced back to 0 (avoids a
+  // big jump on the next frame). Touching refs in an effect is fine — the
+  // restriction is only on touching refs during render.
+  useEffect(() => {
+    if (step === 0) tickAccum.current = 0;
+  }, [step]);
+
+  useFrame((_, delta) => {
+    if (!show || !playing || step >= total) return;
+    tickAccum.current += delta;
+    // Cover the full grid in ~3 seconds, with a minimum sensible rate
+    const cellsPerSecond = Math.max(20, total / 3);
+    const interval = 1 / cellsPerSecond;
+    if (tickAccum.current >= interval) {
+      const advance = Math.floor(tickAccum.current / interval);
+      tickAccum.current -= advance * interval;
+      setStep((s) => Math.min(total, s + advance));
+    }
+  });
+
+  // Update instanced node colors when step changes
+  const nodeMeshRef = useRef();
+  const nodeGlowRef = useRef();
+
+  useEffect(() => {
+    const mesh = nodeMeshRef.current;
+    const glow = nodeGlowRef.current;
+    if (!mesh) return;
+
+    const dummy = new THREE.Object3D();
+    const color = new THREE.Color();
+    const baseRadius = latticeConstant * 0.18;
+
+    for (let idx = 0; idx < positions.length; idx++) {
+      const { position } = positions[idx];
+      const filled = idx < step;
+      const r = filled ? baseRadius : baseRadius * 0.55;
+
+      dummy.position.set(...position);
+      dummy.scale.setScalar(r);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(idx, dummy.matrix);
+
+      if (filled) {
+        // Interpolate dim → champagne gold by log path count
+        const t = logField[idx] / maxLog;
+        color.copy(PATH_NODE_DIM).lerp(PATH_NODE_COLOR, 0.25 + 0.75 * t);
+      } else {
+        color.copy(PATH_NODE_DIM);
+      }
+      mesh.setColorAt(idx, color);
+
+      if (glow) {
+        dummy.scale.setScalar(r * 1.3);
+        dummy.updateMatrix();
+        glow.setMatrixAt(idx, dummy.matrix);
+      }
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    if (glow) glow.instanceMatrix.needsUpdate = true;
+  }, [positions, logField, maxLog, step, latticeConstant]);
+
+  // Edge geometry — recomputed only when grid dims change
+  const edgeGeometry = useMemo(() => {
+    const pts = [];
+    for (const e of edges) {
+      pts.push(new THREE.Vector3(...e.start));
+      pts.push(new THREE.Vector3(...e.end));
+    }
+    return new THREE.BufferGeometry().setFromPoints(pts);
+  }, [edges]);
+
+  if (!show) return null;
+
+  return (
+    <group>
+      {/* Edges (DP connectivity) */}
+      {showEdges && (
+        <lineSegments geometry={edgeGeometry}>
+          <lineBasicMaterial
+            color={PATH_EDGE_COLOR}
+            transparent
+            opacity={0.18}
+          />
+        </lineSegments>
+      )}
+
+      {/* Glow shells */}
+      <instancedMesh ref={nodeGlowRef} args={[null, null, positions.length]}>
+        <sphereGeometry args={[1, 12, 12]} />
+        <meshBasicMaterial
+          color={PATH_NODE_COLOR}
+          transparent
+          opacity={0.12}
+          side={THREE.BackSide}
+        />
+      </instancedMesh>
+
+      {/* Main nodes */}
+      <instancedMesh ref={nodeMeshRef} args={[null, null, positions.length]}>
+        <sphereGeometry args={[1, 20, 20]} />
+        <meshPhysicalMaterial
+          metalness={0.5}
+          roughness={0.25}
+          envMapIntensity={1.0}
+          vertexColors
+        />
+      </instancedMesh>
+
+      {/* Origin and target labels */}
+      <Html position={positions[0].position} center style={{ pointerEvents: 'none' }}>
+        <div className="path-label path-origin">(0,0,0)</div>
+      </Html>
+      <Html position={positions[positions.length - 1].position} center style={{ pointerEvents: 'none' }}>
+        <div className="path-label path-target">({a},{b},{c})</div>
+      </Html>
+    </group>
+  );
+}
+
 /* ── Rotating Group ── */
 
 function RotatingGroup({ children, autoRotate, speed = 0.3 }) {
@@ -386,8 +553,9 @@ function ScreenshotHelper({ screenshotRef }) {
 
 /* ── Main Lattice ── */
 
-function Lattice({ structure, repeat, latticeConstant, showBonds, showUnitCell, autoRotate, atomRadius, millerIndices, onPlaneStats, onAtomClick, selectedAtomIdx }) {
+function Lattice({ structure, repeat, latticeConstant, showBonds, showUnitCell, autoRotate, atomRadius, millerIndices, latticePaths, onPlaneStats, onAtomClick, selectedAtomIdx }) {
   const a = latticeConstant || structure.defaultA;
+  const pathMode = latticePaths && latticePaths.show;
 
   const atoms = useMemo(
     () => generateLattice(structure, repeat, a),
@@ -432,23 +600,30 @@ function Lattice({ structure, repeat, latticeConstant, showBonds, showUnitCell, 
 
   return (
     <RotatingGroup autoRotate={autoRotate}>
-      <InstancedAtoms
-        atoms={atoms}
-        structure={structure}
-        atomRadius={atomRadius}
-        highlightedAtoms={highlightedAtoms}
-        onAtomClick={onAtomClick}
-      />
-      <Bonds bonds={bonds} color={structure.color} />
-      <UnitCellWireframe structure={structure} latticeConstant={a} visible={showUnitCell} />
-      <MillerPlane
-        structure={structure}
-        latticeConstant={a}
-        millerIndices={millerIndices}
-        latticeBounds={latticeBounds}
-      />
-      {selectedAtom && (
-        <AtomTooltip atom={selectedAtom} structure={structure} position={selectedAtom.position} />
+      {!pathMode && (
+        <>
+          <InstancedAtoms
+            atoms={atoms}
+            structure={structure}
+            atomRadius={atomRadius}
+            highlightedAtoms={highlightedAtoms}
+            onAtomClick={onAtomClick}
+          />
+          <Bonds bonds={bonds} color={structure.color} />
+          <UnitCellWireframe structure={structure} latticeConstant={a} visible={showUnitCell} />
+          <MillerPlane
+            structure={structure}
+            latticeConstant={a}
+            millerIndices={millerIndices}
+            latticeBounds={latticeBounds}
+          />
+          {selectedAtom && (
+            <AtomTooltip atom={selectedAtom} structure={structure} position={selectedAtom.position} />
+          )}
+        </>
+      )}
+      {pathMode && (
+        <LatticePathOverlay latticePaths={latticePaths} latticeConstant={a} />
       )}
     </RotatingGroup>
   );
@@ -456,7 +631,7 @@ function Lattice({ structure, repeat, latticeConstant, showBonds, showUnitCell, 
 
 /* ── Exported Scene ── */
 
-export default function CrystalScene({ structure, settings, millerIndices, onPlaneStats, onScreenshot }) {
+export default function CrystalScene({ structure, settings, millerIndices, latticePaths, onPlaneStats, onScreenshot }) {
   const {
     repeat = 2, latticeConstant, showBonds = true,
     showUnitCell = true, autoRotate = true, atomRadius = 0.3,
@@ -500,7 +675,8 @@ export default function CrystalScene({ structure, settings, millerIndices, onPla
       <Lattice
         structure={structure} repeat={repeat} latticeConstant={latticeConstant}
         showBonds={showBonds} showUnitCell={showUnitCell} autoRotate={autoRotate}
-        atomRadius={atomRadius} millerIndices={millerIndices} onPlaneStats={onPlaneStats}
+        atomRadius={atomRadius} millerIndices={millerIndices} latticePaths={latticePaths}
+        onPlaneStats={onPlaneStats}
         onAtomClick={handleAtomClick} selectedAtomIdx={selectedAtomIdx}
       />
       <OrbitControls enablePan enableZoom enableRotate minDistance={3} maxDistance={30} autoRotate={false} />
