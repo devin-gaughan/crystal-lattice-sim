@@ -10,7 +10,9 @@
   --text-primary: #e8eaed;
   --text-secondary: #8b8fa3;
   --text-muted: #555872;
-  --accent: #a78bfa;
+  --accent: #d4af37;
+  --primary: #c9a961;
+  --secondary: #8b7355;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
@@ -45,8 +47,8 @@ body {
   flex: 1;
   position: relative;
   background:
-    radial-gradient(ellipse at 30% 50%, rgba(100, 80, 160, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 30%, rgba(60, 100, 180, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 50%, rgba(201, 169, 97, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 30%, rgba(139, 115, 85, 0.04) 0%, transparent 50%),
     var(--bg-deep);
 }
 
@@ -163,8 +165,8 @@ body {
 .structure-btn.active {
   border-color: var(--accent);
   color: var(--text-primary);
-  background: rgba(167, 139, 250, 0.06);
-  box-shadow: 0 0 12px rgba(167, 139, 250, 0.08);
+  background: rgba(212, 175, 55, 0.06);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.08);
 }
 
 .structure-dot {
@@ -339,8 +341,8 @@ body {
 }
 
 input:checked + .toggle-switch {
-  background: rgba(167, 139, 250, 0.15);
-  border-color: rgba(167, 139, 250, 0.3);
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
 input:checked + .toggle-switch::after {
@@ -384,10 +386,10 @@ input:checked + .toggle-switch::after {
 }
 
 .preset-chip.active {
-  border-color: #60dfff;
+  border-color: #c9a961;
   color: var(--text-primary);
-  background: rgba(96, 223, 255, 0.08);
-  box-shadow: 0 0 8px rgba(96, 223, 255, 0.1);
+  background: rgba(201, 169, 97, 0.08);
+  box-shadow: 0 0 8px rgba(201, 169, 97, 0.1);
 }
 
 /* ── HKL Inputs ── */
@@ -414,7 +416,7 @@ input:checked + .toggle-switch::after {
 }
 
 .hkl-field:focus-within {
-  border-color: #60dfff;
+  border-color: #c9a961;
 }
 
 .hkl-label {
@@ -457,8 +459,8 @@ input:checked + .toggle-switch::after {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: rgba(96, 223, 255, 0.05);
-  border: 1px solid rgba(96, 223, 255, 0.15);
+  background: rgba(201, 169, 97, 0.05);
+  border: 1px solid rgba(201, 169, 97, 0.15);
   border-radius: var(--radius-sm);
 }
 
@@ -468,7 +470,7 @@ input:checked + .toggle-switch::after {
 }
 
 .atoms-value {
-  color: #60dfff !important;
+  color: #c9a961 !important;
 }
 
 .dspacing-label {
@@ -483,7 +485,7 @@ input:checked + .toggle-switch::after {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #60dfff;
+  color: #c9a961;
 }
 
 /* ── Structure Factor Badges ── */
@@ -498,8 +500,8 @@ input:checked + .toggle-switch::after {
 }
 
 .sf-badge.allowed {
-  background: rgba(96, 223, 255, 0.05);
-  border: 1px solid rgba(96, 223, 255, 0.15);
+  background: rgba(201, 169, 97, 0.05);
+  border: 1px solid rgba(201, 169, 97, 0.15);
 }
 
 .sf-badge.forbidden {
@@ -511,7 +513,7 @@ input:checked + .toggle-switch::after {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.82rem;
   font-weight: 500;
-  color: #60dfff;
+  color: #c9a961;
 }
 
 .sf-status {
@@ -600,7 +602,7 @@ input:checked + .toggle-switch::after {
 }
 
 .xrd-peak-label.active {
-  fill: #a78bfa;
+  fill: #d4af37;
   font-weight: 500;
   font-size: 8px;
 }
@@ -653,11 +655,11 @@ input:checked + .toggle-switch::after {
 }
 
 .xrd-row:hover {
-  background: rgba(96, 223, 255, 0.04);
+  background: rgba(201, 169, 97, 0.04);
 }
 
 .xrd-row.active {
-  background: rgba(167, 139, 250, 0.08);
+  background: rgba(212, 175, 55, 0.08);
 }
 
 .xrd-row.active td {
@@ -670,7 +672,7 @@ input:checked + .toggle-switch::after {
 }
 
 .xrd-row.active .xrd-hkl {
-  color: #a78bfa !important;
+  color: #d4af37 !important;
 }
 
 /* ── Screenshot Button ── */
@@ -693,7 +695,7 @@ input:checked + .toggle-switch::after {
 .screenshot-btn:hover {
   border-color: var(--accent);
   color: var(--text-primary);
-  background: rgba(167, 139, 250, 0.06);
+  background: rgba(212, 175, 55, 0.06);
 }
 
 /* ── Atom Tooltip (HTML overlay inside Canvas) ── */
@@ -849,8 +851,8 @@ input:checked + .toggle-switch::after {
   flex-direction: column;
   gap: 4px;
   padding: 8px 12px;
-  background: rgba(96, 223, 255, 0.05);
-  border: 1px solid rgba(96, 223, 255, 0.15);
+  background: rgba(201, 169, 97, 0.05);
+  border: 1px solid rgba(201, 169, 97, 0.15);
   border-radius: var(--radius-sm);
   margin-bottom: 14px;
   min-width: 0;
@@ -860,7 +862,7 @@ input:checked + .toggle-switch::after {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.78rem;
   font-weight: 500;
-  color: #60dfff;
+  color: #c9a961;
   word-break: break-word;
   line-height: 1.3;
 }
